@@ -1,103 +1,169 @@
+// ✅ page.tsx
+import React from "react";
+import Head from "next/head";
 import Image from "next/image";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faStar,
+  faStarHalfAlt,
+  faHeart,
+  faUsers,
+} from "@fortawesome/free-solid-svg-icons";
 
-export default function Home() {
+import GameCard from "./components/card";
+import RecentlyPlayedItem from "./components/recently_item";
+import Link from "next/link";
+
+const HomePage: React.FC = () => {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="pt-[72px] px-6 md:px-8">
+      {/* Hero Section */}
+      <section className="mb-12">
+        <Link
+          href="/gamekey/god-of-war-ragnarok"
+          className="block group transition-transform hover:scale-105"
+        >
+          <div className="flex flex-col lg:flex-row gap-0 rounded-xl overflow-hidden shadow-xl bg-gradient-to-br from-gray-900 via-black to-gray-800 transform transition duration-300 hover:scale-105 hover:shadow-2xl">
+            {/* Left: Game image with overlay */}
+            <div className="lg:w-2/3 w-full relative">
+              <Image
+                src="/img/god-of-war-ragnarok-playstation-5-game-playstation-store-united-states-cover.jpg"
+                alt="God of War Ragnarok"
+                width={800}
+                height={400}
+                className="object-cover w-full h-[300px] lg:h-[500px]"
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 flex items-end justify-between">
+                <div>
+                  <span className="text-xs bg-red-600 px-2 py-1 rounded-full text-white font-semibold shadow">
+                    Popular
+                  </span>
+                  <p className="text-xl font-bold text-white drop-shadow">
+                    GOD OF WAR
+                  </p>
+                  <p className="text-sm text-gray-200">RAGNAROK</p>
+                </div>
+              </div>
+            </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {/* Right: Game detail */}
+            <div className="lg:w-1/3 w-full p-6 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-gray-700">
+              <div>
+                <h2 className="text-2xl font-bold mb-2 text-white">
+                  God Of War
+                  <br />
+                  <span className="text-gray-300">(Ragnarök)</span>
+                </h2>
+                <div className="text-sm mb-4">
+                  <span className="bg-gray-800 px-2 py-1 rounded-full text-xs mr-1 text-white border border-gray-700">
+                    Action
+                  </span>
+                  <span className="bg-gray-800 px-2 py-1 rounded-full text-xs text-white border border-gray-700">
+                    Adventure
+                  </span>
+                </div>
+                <div className="flex items-center mb-4">
+                  <div className="flex text-red-500 text-lg mr-2">
+                    <FontAwesomeIcon icon={faStar} />
+                    <FontAwesomeIcon icon={faStar} />
+                    <FontAwesomeIcon icon={faStar} />
+                    <FontAwesomeIcon icon={faStar} />
+                    <FontAwesomeIcon icon={faStarHalfAlt} />
+                  </div>
+                  <span className="text-sm text-gray-400">
+                    Rating 4.9 of 50
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <button className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-md flex items-center justify-center space-x-2 transition-colors duration-200 font-semibold shadow">
+                  <FontAwesomeIcon icon={faHeart} />
+                  <span>Add to Wishlist</span>
+                </button>
+                <button className="w-full bg-white hover:bg-gray-100 text-black py-3 rounded-md flex items-center justify-center space-x-2 text-lg font-bold transition-colors duration-200 shadow">
+                  <span>$49.00</span>
+                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button className="bg-gradient-to-r from-gray-800 via-gray-700 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white py-2 rounded-md transition-colors duration-200 border border-gray-700">
+                    <span className="block text-sm font-semibold">DLC</span>
+                    <span className="block text-xs text-gray-300">
+                      Definitive Edition
+                    </span>
+                  </button>
+                  <button className="bg-gradient-to-r from-gray-800 via-gray-700 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white py-2 rounded-md transition-colors duration-200 border border-gray-700">
+                    <span className="block text-sm font-semibold">DLC</span>
+                    <span className="block text-xs text-gray-300">
+                      Thor Edition
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Link>
+      </section>
+
+      {/* Recommended Games Section */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-bold mb-6 text-white">
+          Recommended Games
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <GameCard
+            title="Assassin's Creed Valhalla"
+            edition="Standard Edition"
+            originalPrice={40}
+            discount={30}
+            imageUrl="/img/Assassin's_Creed_Valhalla_cover.jpg"
+            slug="assassins-creed-valhalla"
+          />
+          <GameCard
+            title="Witcher 3 Wild Hunt"
+            edition="Standard Edition"
+            originalPrice={53}
+            discount={18}
+            imageUrl="/img/Witcher_3_cover_art.jpg"
+            slug="witcher-3-wild-hunt"
+          />
+          <GameCard
+            title="Horizon Zero Dawn"
+            edition="Complete Edition"
+            originalPrice={60}
+            discount={13}
+            imageUrl="/img/Horizon_Zero_Dawn.jpg"
+            slug="horizon-zero-dawn"
+          />
+          <GameCard
+            title="Call of Duty Modern Warfare"
+            edition="Standard Edition"
+            originalPrice={75}
+            discount={17}
+            imageUrl="/img/Call_of_Duty_Modern_Warfare_(2019)_cover.jpg"
+            slug="call-of-duty-modern-warfare"
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      </section>
+
+      {/* Recently Played Section */}
+      <section>
+        <h2 className="text-2xl font-bold mb-6 text-white">Recently Item</h2>
+        <div className="space-y-4">
+          <RecentlyPlayedItem
+            title="Fall Guys"
+            subtitle="Squad Celebration"
+            keyStatus="activated"
+            imageUrl="/img/download.jpg"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+          <RecentlyPlayedItem
+            title="Tomb Raider"
+            subtitle="The Star of the Tomb"
+            keyStatus="not-activated"
+            imageUrl="/img/download (1).jpg"
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+      </section>
     </div>
   );
-}
+};
+
+export default HomePage;

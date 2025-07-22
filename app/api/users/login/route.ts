@@ -1,0 +1,67 @@
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import pool from "../../../util/db";
+
+export async function POST(request: NextRequest) {
+  const { username, password } = await request.json();
+
+  console.log("📥 Login Request:", { username, password });
+
+  if (!username || !password) {
+    console.log("❌ Missing fields");
+    return NextResponse.json(
+      { success: false, message: "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน" },
+      { status: 400 }
+    );
+  }
+
+  const connection = await pool.getConnection();
+
+  try {
+    const [rows] = await connection.query(
+      "SELECT * FROM user WHERE username = ?",
+      [username]
+    );
+
+    const user = (rows as any[])[0];
+    console.log("🔎 User found in DB:", user);
+
+    if (!user) {
+      console.log("❌ User not found");
+      return NextResponse.json(
+        { success: false, message: "ไม่พบผู้ใช้นี้" },
+        { status: 404 }
+      );
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    console.log("🔐 Password match:", isPasswordCorrect);
+
+    if (!isPasswordCorrect) {
+      console.log("❌ Incorrect password");
+      return NextResponse.json(
+        { success: false, message: "รหัสผ่านไม่ถูกต้อง" },
+        { status: 401 }
+      );
+    }
+
+    console.log("✅ Login success");
+    return NextResponse.json({
+      success: true,
+      message: "เข้าสู่ระบบสำเร็จ",
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (err: any) {
+    console.error("🔥 Error:", err);
+    return NextResponse.json(
+      { success: false, error: err.message || String(err) },
+      { status: 500 }
+    );
+  } finally {
+    connection.release();
+  }
+}
