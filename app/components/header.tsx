@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -10,8 +10,22 @@ import {
   faCog,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
+import Image from "next/image";
+import axios from "axios";
+
+interface UserProfile {
+  username: string;
+  avatar?: string;
+}
 
 const Header: React.FC = () => {
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    axios.get("/api/users/profile").then((res) => setUser(res.data));
+  }, []);
+
   return (
     <header className="fixed top-0 left-64 right-0 h-[72px] bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white px-6 flex items-center justify-between shadow-md z-50">
       <div className="flex items-center space-x-4">
@@ -30,17 +44,9 @@ const Header: React.FC = () => {
           />
         </div>
       </div>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4 relative">
         <span className="text-sm">Online</span>
         <div className="flex space-x-2">
-          <div className="relative group">
-            <button className="relative w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-semibold">
-              JS
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
-                9+
-              </span>
-            </button>
-          </div>
           <FontAwesomeIcon
             icon={faEnvelope}
             className="text-lg hover:text-white cursor-pointer"
@@ -53,15 +59,52 @@ const Header: React.FC = () => {
             icon={faGift}
             className="text-lg hover:text-white cursor-pointer"
           />
+          <FontAwesomeIcon
+            icon={faCog}
+            className="text-lg hover:text-white cursor-pointer"
+          />
         </div>
-        <FontAwesomeIcon
-          icon={faCog}
-          className="text-lg hover:text-white cursor-pointer"
-        />
-        <FontAwesomeIcon
-          icon={faUserCircle}
-          className="text-lg hover:text-white cursor-pointer"
-        />
+
+        {/* Profile */}
+        <div className="relative">
+          <button
+            className="flex items-center space-x-2 cursor-pointer"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+          >
+            {user?.avatar ? (
+              <Image
+                src={user.avatar}
+                alt="avatar"
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
+            ) : (
+              <FontAwesomeIcon
+                icon={faUserCircle}
+                className="text-2xl text-white"
+              />
+            )}
+            <span className="text-sm">{user?.username || "Guest"}</span>
+          </button>
+
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded shadow-lg z-50">
+              <Link
+                href="/profile"
+                className="block px-4 py-2 hover:bg-gray-100"
+              >
+                โปรไฟล์ของฉัน
+              </Link>
+              <button
+                onClick={() => alert("คุณสามารถเชื่อมระบบ logout ได้ตรงนี้")}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+              >
+                ออกจากระบบ
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

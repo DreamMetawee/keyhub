@@ -16,6 +16,7 @@ const mainMenuItems = [
   { name: "คลังคีย์เกม", icon: faKey, path: "/gamekey" },
   { name: "คีย์ล่าสุด", icon: faGamepad, path: "/recently_key" },
   { name: "หมวดหมู่", icon: faGroupArrowsRotate, path: "/category" },
+  { name: "Subscription", icon: faUser, path: "/demographic" },
 ];
 
 const Sidebar: React.FC = () => {
