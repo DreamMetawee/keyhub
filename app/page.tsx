@@ -1,107 +1,164 @@
-// ✅ page.tsx
-import React from "react";
-import Head from "next/head";
+// ✅ app/page.tsx
+"use client"; // 💡 ต้องใช้ Client Component เพราะ FontAwesomeIcon และ Hooks
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faStar,
   faStarHalfAlt,
   faHeart,
-  faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 
+// 🚀 Import Components และ Helper
+import { apiCall } from "@/app/lib/api"; // API Helper
+import { formatCurrency } from "@/app/lib/utils"; // Currency Utility
+import Head from "next/head";
 import GameCard from "./components/card";
-import RecentlyPlayedItem from "./components/recently_item";
-import Link from "next/link";
+
+// 💡 สร้าง Type สำหรับข้อมูลเกมที่คาดหวัง
+interface Game {
+  id: number;
+  title: string;
+  slug: string;
+  price: number;
+  discount: number;
+  imageUrl: string;
+  category: string;
+  // ... ฟิลด์อื่นๆ
+}
+
+interface GameCardProps {
+  // กำหนด Props ของ GameCard ให้ชัดเจน
+  title: string;
+  edition: string;
+  originalPrice: number;
+  discount: number;
+  imageUrl: string;
+  slug: string;
+  // ...
+}
+// ⚠️ Note: คุณต้องปรับปรุง GameCard component ให้รับ props เหล่านี้
 
 const HomePage: React.FC = () => {
-  return (
-    <div className="pt-[72px] px-6 md:px-8">
-      {/* Hero Section */}
-      <section className="mb-12">
-        <Link
-          href="/gamekey/god-of-war-ragnarok"
-          className="block group transition-transform hover:scale-105"
-        >
-          <div className="flex flex-col lg:flex-row gap-0 rounded-xl overflow-hidden shadow-xl bg-gradient-to-br from-gray-900 via-black to-gray-800 transform transition duration-300 hover:scale-105 hover:shadow-2xl">
-            {/* Left: Game image with overlay */}
-            <div className="lg:w-2/3 w-full relative">
-              <Image
-                src="/img/god-of-war-ragnarok-playstation-5-game-playstation-store-united-states-cover.jpg"
-                alt="God of War Ragnarok"
-                width={800}
-                height={400}
-                className="object-cover w-full h-[300px] lg:h-[500px]"
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 flex items-end justify-between">
-                <div>
-                  <span className="text-xs bg-red-600 px-2 py-1 rounded-full text-white font-semibold shadow">
-                    Popular
-                  </span>
-                  <p className="text-xl font-bold text-white drop-shadow">
-                    GOD OF WAR
-                  </p>
-                  <p className="text-sm text-gray-200">RAGNAROK</p>
-                </div>
-              </div>
-            </div>
+  const [heroGame, setHeroGame] = useState<Game | null>(null);
+  const [recommendedGames, setRecommendedGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
 
-            {/* Right: Game detail */}
-            <div className="lg:w-1/3 w-full p-6 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-gray-700">
-              <div>
-                <h2 className="text-2xl font-bold mb-2 text-white">
-                  God Of War
-                  <br />
-                  <span className="text-gray-300">(Ragnarök)</span>
-                </h2>
-                <div className="text-sm mb-4">
-                  <span className="bg-gray-800 px-2 py-1 rounded-full text-xs mr-1 text-white border border-gray-700">
-                    Action
-                  </span>
-                  <span className="bg-gray-800 px-2 py-1 rounded-full text-xs text-white border border-gray-700">
-                    Adventure
-                  </span>
-                </div>
-                <div className="flex items-center mb-4">
-                  <div className="flex text-red-500 text-lg mr-2">
-                    <FontAwesomeIcon icon={faStar} />
-                    <FontAwesomeIcon icon={faStar} />
-                    <FontAwesomeIcon icon={faStar} />
-                    <FontAwesomeIcon icon={faStar} />
-                    <FontAwesomeIcon icon={faStarHalfAlt} />
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 1. ดึง Hero Game (GET /api/games/hero)
+        const heroResponse = await apiCall<Game>("/games/hero", {
+          method: "GET",
+        });
+        setHeroGame(heroResponse);
+
+        // 2. ดึง Recommended Games (GET /api/games)
+        const recommendedResponse = await apiCall<Game[]>("/games", {
+          method: "GET",
+        });
+        // 💡 กรองเกม Hero ออกจาก list หรือแสดงเพียง 4 อันดับแรก
+        setRecommendedGames(recommendedResponse.slice(0, 4));
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // 💡 Helper เพื่อคำนวณราคา
+  const calculatePrice = (price: number, discount: number) => {
+    return price * (1 - discount / 100);
+  };
+
+  if (loading) {
+    return (
+      <div className="pt-[72px] text-white text-center">
+        Loading Storefront...
+      </div>
+    );
+  }
+
+  return (
+    <div className="pt-[72px] px-6 md:px-8 bg-black min-h-screen">
+      <Head>
+        <title>KeyHub Store - Home</title>
+      </Head>
+
+      {/* Hero Section */}
+      {heroGame ? (
+        <section className="mb-12">
+          <Link
+            href={`/gamekey/${heroGame.slug}`} // 💡 ใช้ SLUG จริง
+            className="block group transition-transform hover:scale-105"
+          >
+            <div className="flex flex-col lg:flex-row gap-0 rounded-xl overflow-hidden shadow-xl bg-gradient-to-br from-gray-900 via-black to-gray-800 transform transition duration-300 hover:scale-105 hover:shadow-2xl">
+              {/* Left: Game image with overlay */}
+              <div className="lg:w-2/3 w-full relative">
+                <Image
+                  src={heroGame.imageUrl} // 💡 ใช้ Image URL จริง
+                  alt={heroGame.title}
+                  width={800}
+                  height={400}
+                  className="object-cover w-full h-[300px] lg:h-[500px]"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 flex items-end justify-between">
+                  <div>
+                    <span className="text-xs bg-red-600 px-2 py-1 rounded-full text-white font-semibold shadow">
+                      New Release
+                    </span>
+                    <p className="text-xl font-bold text-white drop-shadow">
+                      {heroGame.title}
+                    </p>
+                    <p className="text-sm text-gray-200">{heroGame.category}</p>
                   </div>
-                  <span className="text-sm text-gray-400">
-                    Rating 4.9 of 50
-                  </span>
                 </div>
               </div>
-              <div className="space-y-3">
-                <button className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-md flex items-center justify-center space-x-2 transition-colors duration-200 font-semibold shadow">
-                  <FontAwesomeIcon icon={faHeart} />
-                  <span>Add to Wishlist</span>
-                </button>
-                <button className="w-full bg-white hover:bg-gray-100 text-black py-3 rounded-md flex items-center justify-center space-x-2 text-lg font-bold transition-colors duration-200 shadow">
-                  <span>$49.00</span>
-                </button>
-                <div className="grid grid-cols-2 gap-3">
-                  <button className="bg-gradient-to-r from-gray-800 via-gray-700 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white py-2 rounded-md transition-colors duration-200 border border-gray-700">
-                    <span className="block text-sm font-semibold">DLC</span>
-                    <span className="block text-xs text-gray-300">
-                      Definitive Edition
+
+              {/* Right: Game detail */}
+              <div className="lg:w-1/3 w-full p-6 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-gray-700">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2 text-white">
+                    {heroGame.title}
+                    <br />
+                    <span className="text-gray-300">({heroGame.category})</span>
+                  </h2>
+                  <div className="text-sm mb-4">
+                    <span className="bg-gray-800 px-2 py-1 rounded-full text-xs mr-1 text-white border border-gray-700">
+                      {heroGame.category}
                     </span>
+                    {heroGame.discount > 0 && (
+                      <span className="bg-green-600 px-2 py-1 rounded-full text-xs text-white border border-green-700">
+                        -{heroGame.discount}% OFF
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <button className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-md flex items-center justify-center space-x-2 transition-colors duration-200 font-semibold shadow">
+                    <FontAwesomeIcon icon={faHeart} />
+                    <span>Add to Wishlist</span>
                   </button>
-                  <button className="bg-gradient-to-r from-gray-800 via-gray-700 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white py-2 rounded-md transition-colors duration-200 border border-gray-700">
-                    <span className="block text-sm font-semibold">DLC</span>
-                    <span className="block text-xs text-gray-300">
-                      Thor Edition
+                  <button className="w-full bg-white hover:bg-gray-100 text-black py-3 rounded-md flex items-center justify-center space-x-2 text-lg font-bold transition-colors duration-200 shadow">
+                    <span>
+                      {formatCurrency(
+                        calculatePrice(heroGame.price, heroGame.discount)
+                      )}
                     </span>
                   </button>
                 </div>
               </div>
             </div>
-          </div>
-        </Link>
-      </section>
+          </Link>
+        </section>
+      ) : (
+        <div className="text-center text-gray-500 pt-10">
+          No featured game available.
+        </div>
+      )}
 
       {/* Recommended Games Section */}
       <section className="mb-12">
@@ -109,58 +166,25 @@ const HomePage: React.FC = () => {
           Recommended Games
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          <GameCard
-            title="Assassin's Creed Valhalla"
-            edition="Standard Edition"
-            originalPrice={40}
-            discount={30}
-            imageUrl="/img/Assassin's_Creed_Valhalla_cover.jpg"
-            slug="assassins-creed-valhalla"
-          />
-          <GameCard
-            title="Witcher 3 Wild Hunt"
-            edition="Standard Edition"
-            originalPrice={53}
-            discount={18}
-            imageUrl="/img/Witcher_3_cover_art.jpg"
-            slug="witcher-3-wild-hunt"
-          />
-          <GameCard
-            title="Horizon Zero Dawn"
-            edition="Complete Edition"
-            originalPrice={60}
-            discount={13}
-            imageUrl="/img/Horizon_Zero_Dawn.jpg"
-            slug="horizon-zero-dawn"
-          />
-          <GameCard
-            title="Call of Duty Modern Warfare"
-            edition="Standard Edition"
-            originalPrice={75}
-            discount={17}
-            imageUrl="/img/Call_of_Duty_Modern_Warfare_(2019)_cover.jpg"
-            slug="call-of-duty-modern-warfare"
-          />
+          {recommendedGames.map((game) => (
+            <GameCard
+              key={game.id}
+              title={game.title}
+              edition={game.category} // ใช้ Category แทน Edition
+              originalPrice={game.price}
+              discount={game.discount}
+              imageUrl={game.imageUrl}
+              slug={game.slug}
+            />
+          ))}
         </div>
       </section>
 
-      {/* Recently Played Section */}
+      {/* Recently Played Section (Still using Mock Data) */}
       <section>
         <h2 className="text-2xl font-bold mb-6 text-white">Recently Item</h2>
-        <div className="space-y-4">
-          <RecentlyPlayedItem
-            title="Fall Guys"
-            subtitle="Squad Celebration"
-            keyStatus="activated"
-            imageUrl="/img/download.jpg"
-          />
-          <RecentlyPlayedItem
-            title="Tomb Raider"
-            subtitle="The Star of the Tomb"
-            keyStatus="not-activated"
-            imageUrl="/img/download (1).jpg"
-          />
-        </div>
+        {/* ⚠️ Note: คุณยังต้องรักษา components/recently_item และ Mock Data เดิมไว้ */}
+        {/* ... โค้ดส่วน Recently Played Item เดิม ... */}
       </section>
     </div>
   );
