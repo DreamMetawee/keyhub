@@ -3,9 +3,9 @@ import pool from "../../../util/db";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: NextRequest) {
-  const { email, username, password } = await request.json();
+  const { email, name, password } = await request.json();
 
-  if (!email || !username || !password) {
+  if (!email || !name || !password) {
     return NextResponse.json(
       { success: false, message: "กรุณากรอกข้อมูลให้ครบ" },
       { status: 400 }
@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
     }
 
     const [userByUsername] = await connection.query(
-      "SELECT id FROM user WHERE username = ?",
-      [username]
+      "SELECT id FROM user WHERE name = ?",
+      [name]
     );
     if ((userByUsername as any[]).length > 0) {
       return NextResponse.json(
@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
 
     // Insert user
     const [result] = await connection.query(
-      `INSERT INTO user (email, username, password) VALUES (?, ?, ?)`,
-      [email, username, hashedPassword]
+      `INSERT INTO user (email, name, password) VALUES (?, ?, ?)`,
+      [email, name, hashedPassword]
     );
 
     const insertId = (result as any).insertId;
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "สมัครสมาชิกสำเร็จ",
-      user: { id: insertId, email, username },
+      user: { id: insertId, email, name },
     });
   } catch (error) {
     console.error(error);

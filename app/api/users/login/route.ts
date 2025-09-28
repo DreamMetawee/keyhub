@@ -3,11 +3,11 @@ import bcrypt from "bcryptjs";
 import pool from "../../../util/db";
 
 export async function POST(request: NextRequest) {
-  const { username, password } = await request.json();
+  const { name, password } = await request.json();
 
-  console.log("📥 Login Request:", { username, password });
+  console.log("📥 Login Request:", { name, password });
 
-  if (!username || !password) {
+  if (!name || !password) {
     console.log("❌ Missing fields");
     return NextResponse.json(
       { success: false, message: "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน" },
@@ -19,8 +19,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const [rows] = await connection.query(
-      "SELECT * FROM user WHERE username = ?",
-      [username]
+      "SELECT * FROM user WHERE name = ?",
+      [name]
     );
 
     const user = (rows as any[])[0];
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       message: "เข้าสู่ระบบสำเร็จ",
       user: {
         id: user.id,
-        username: user.username,
+        name: user.name,
         email: user.email,
       },
     });

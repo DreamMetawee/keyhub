@@ -1,126 +1,119 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Label from "../form/Label";
 import Input from "../input/inputfield";
 import Checkbox from "../input/checkbox";
 import Button from "../ui/button/button";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
 import eyeIcon from "../../../public/icons/eye.svg";
 import eyeCloseIcon from "../../../public/icons/eye-off.svg";
+// import { strict } from "assert"; // สามารถลบออกได้ถ้าไม่ได้ใช้
 
-// ฟังก์ชันเรียก API
-async function loginUser(username: string, password: string) {
-  const res = await fetch("/api/users/login", {
+
+// --- API Functions (ส่วนนี้ถูกต้องแล้ว) ---
+async function loginUser(name: string, password: string) {
+  const res = await fetch("http://localhost:3001/api/users/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ name, password }),
   });
-  return await res.json();
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.msg || "Something went wrong");
+  }
+  return data;
 }
 
-// อัปเดตฟังก์ชัน registerUser ให้รับ email ด้วย
-async function registerUser(email: string, username: string, password: string) {
-  const res = await fetch("/api/users/register", {
+async function registerUser(name: string, email: string, password: string) {
+  const res = await fetch("http://localhost:3001/api/users/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, username, password }), // ส่ง email ไปด้วย
+    body: JSON.stringify({ name, email, password }),
   });
-  return await res.json();
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.msg || "Something went wrong");
+  }
+  return data;
 }
 
 export default function SignInForm() {
   const router = useRouter();
-
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  // ... state อื่นๆ เหมือนเดิม
   const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
     email: "",
-    username: "",
+    name: "",
     password: "",
     confirmPassword: "",
   });
 
-  useEffect(() => {
-    const savedUsername = localStorage.getItem("remember");
-    if (savedUsername) {
-      setFormData((prev) => ({
-        ...prev,
-        username: savedUsername,
-      }));
-      setRememberMe(true);
-    }
-  }, []);
-
+  // --- handlerSubmit with Type Annotation ---
+  // TYPE FIX 1: เพิ่ม Type ให้กับ 'e'
   const handlerSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsPending(true);
+    setError("");
 
-    const { email, username, password, confirmPassword } = formData;
-
-    // เพิ่มการตรวจสอบ email เมื่อเป็นโหมดสมัครสมาชิก
-    if (!username || !password || (!isLogin && (!confirmPassword || !email))) {
-      console.warn("กรุณากรอกข้อมูลให้ครบถ้วน");
-      setIsPending(false);
-      return;
-    }
-
-    if (!isLogin && password !== confirmPassword) {
-      console.error("รหัสผ่านไม่ตรงกัน");
-      setIsPending(false);
-      return;
-    }
+    const { email, name, password, confirmPassword } = formData;
 
     try {
-      const response = isLogin
-        ? await loginUser(username, password)
-        : await registerUser(email, username, password); // เรียก registerUser พร้อม email
+      if (isLogin) {
+        const response = await loginUser(formData.name, password);
 
-      if (response.success) {
-        if (rememberMe) {
-          localStorage.setItem("remember", username);
+        console.log("✅ Login response:", response);
+
+        // ถ้า backend ยังไม่ได้ส่ง token สามารถใช้ id หรือ name เป็นเงื่อนไขได้
+        if (response.success) {
+          if (response.token) {
+            localStorage.setItem("token", response.token);
+          }
+          localStorage.setItem("user", JSON.stringify(response.user)); // เก็บ user object ไว้ใช้
+          console.log("Login Success! Redirecting to home...");
+          router.push("/"); // ✅ เปลี่ยนหน้าไป Homepage
         } else {
-          localStorage.removeItem("remember");
-        }
-
-        console.log("Success:", response.message);
-
-        if (isLogin) {
-          router.push("/"); // Login สำเร็จ ไปหน้า homepage
-        } else {
-          // Register สำเร็จ: เปลี่ยนไปแสดงฟอร์ม Login และล้างข้อมูลฟอร์ม
-          setIsLogin(true);
-          setFormData({
-            email: "",
-            username: "",
-            password: "",
-            confirmPassword: "",
-          });
-          console.log("Registration successful, please log in.");
+          setError(response.message || "เข้าสู่ระบบไม่สำเร็จ");
         }
       } else {
-        console.error("Error:", response.message);
+        await registerUser(name, email, password);
+        console.log("Registration successful, please log in.");
+        setIsLogin(true);
+        setFormData({
+          email: formData.email,
+          name: formData.name,
+          password: "",
+          confirmPassword: "",
+        });
       }
-    } catch (error) {
-      console.error("เกิดข้อผิดพลาด:", error);
+    } catch (err) {
+      console.error("Operation failed:", err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("เกิดข้อผิดพลาดไม่ทราบสาเหตุ");
+      }
     } finally {
       setIsPending(false);
     }
   };
 
+
+  // --- handlerChange with Type Annotation ---
+  // TYPE FIX 3: เพิ่ม Type ให้กับ 'e'
   const handlerChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    if (type === "checkbox") {
-      setRememberMe(checked);
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // --- JSX (ไม่ต้องแก้ไข) ---
   return (
     <div className="flex flex-1 flex-col min-h-screen">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
@@ -130,13 +123,13 @@ export default function SignInForm() {
           </h1>
           <p className="text-sm text-gray-200 dark:text-gray-300">
             {isLogin
-              ? "กรอกชื่อผู้ใช้งานและรหัสผ่านของคุณเพื่อเข้าสู่ระบบ!"
+              ? "กรอกอีเมลและรหัสผ่านของคุณเพื่อเข้าสู่ระบบ!"
               : "กรอกข้อมูลเพื่อสร้างบัญชีผู้ใช้งานใหม่!"}
           </p>
         </div>
         <form onSubmit={handlerSubmit}>
           <div className="space-y-6">
-            {/* เพิ่มช่องกรอก Email เฉพาะตอนสมัครสมาชิก */}
+            {/* Input fields */}
             {!isLogin && (
               <div>
                 <Label>
@@ -157,8 +150,8 @@ export default function SignInForm() {
                 ชื่อผู้ใช้งาน <span className="text-error-500">*</span>
               </Label>
               <Input
-                value={formData.username}
-                name="username"
+                value={formData.name}
+                name="name"
                 onChange={handlerChange}
                 placeholder="กรุณากรอกชื่อผู้ใช้งาน"
                 className="text-white"
@@ -191,7 +184,6 @@ export default function SignInForm() {
                 </span>
               </div>
             </div>
-
             {!isLogin && (
               <div>
                 <Label>
@@ -208,25 +200,29 @@ export default function SignInForm() {
               </div>
             )}
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Checkbox checked={rememberMe} onChange={setRememberMe} />
-                <span className="text-theme-sm block font-normal text-gray-700 dark:text-gray-400">
-                  จำฉันไว้
-                </span>
-              </div>
-            </div>
+            {/* Error display */}
+            {error && (
+              <p className="text-sm text-red-500 text-center">{error}</p>
+            )}
 
+            {/* Submit button and toggle */}
             <div>
               <Button disabled={isPending} className="w-full" size="sm">
-                {isLogin ? "ลงชื่อเข้าใช้" : "สมัครสมาชิก"}
+                {isPending
+                  ? "กำลังโหลด..."
+                  : isLogin
+                  ? "ลงชื่อเข้าใช้"
+                  : "สมัครสมาชิก"}
               </Button>
               <div className="mt-3 text-center text-sm">
                 {isLogin ? (
                   <>
                     ยังไม่มีบัญชี?{" "}
                     <span
-                      onClick={() => setIsLogin(false)}
+                      onClick={() => {
+                        setIsLogin(false);
+                        setError("");
+                      }}
                       className="cursor-pointer text-blue-500 hover:underline"
                     >
                       สมัครสมาชิก
@@ -236,7 +232,10 @@ export default function SignInForm() {
                   <>
                     มีบัญชีอยู่แล้ว?{" "}
                     <span
-                      onClick={() => setIsLogin(true)}
+                      onClick={() => {
+                        setIsLogin(true);
+                        setError("");
+                      }}
                       className="cursor-pointer text-blue-500 hover:underline"
                     >
                       เข้าสู่ระบบ
