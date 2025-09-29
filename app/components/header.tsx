@@ -12,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 import axios from "axios";
+import CartIcon from "./carticon"; // ✅ 1. Import CartIcon
 
 interface UserProfile {
   username: string;
@@ -23,7 +24,12 @@ const Header: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
-    axios.get("/api/users/profile").then((res) => setUser(res.data));
+    // This assumes you have an API to get the current user's profile
+    // It should be protected and use a token to identify the user
+    axios
+      .get("/api/users/profile")
+      .then((res) => setUser(res.data))
+      .catch((err) => console.error("Not logged in"));
   }, []);
 
   return (
@@ -44,9 +50,10 @@ const Header: React.FC = () => {
           />
         </div>
       </div>
-      <div className="flex items-center space-x-4 relative">
-        <span className="text-sm">Online</span>
-        <div className="flex space-x-2">
+      <div className="flex items-center space-x-6 relative">
+        {" "}
+        {/* Increased spacing */}
+        <div className="flex items-center space-x-4">
           <FontAwesomeIcon
             icon={faEnvelope}
             className="text-lg hover:text-white cursor-pointer"
@@ -63,8 +70,10 @@ const Header: React.FC = () => {
             icon={faCog}
             className="text-lg hover:text-white cursor-pointer"
           />
-        </div>
 
+          {/* ✅ 2. Add the CartIcon component here */}
+          <CartIcon />
+        </div>
         {/* Profile */}
         <div className="relative">
           <button
@@ -93,6 +102,7 @@ const Header: React.FC = () => {
               <Link
                 href="/profile"
                 className="block px-4 py-2 hover:bg-gray-100"
+                onClick={() => setDropdownOpen(false)} // Close dropdown on click
               >
                 โปรไฟล์ของฉัน
               </Link>

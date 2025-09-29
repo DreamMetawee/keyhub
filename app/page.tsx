@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, MouseEvent } from "react";
+import Link from "next/link";
+import Image from "next/image"; // เพิ่ม Import สำหรับ Image
+import useCart from "@/app/lib/useCart"; // 1. Import useCart Hook (ตรวจสอบ Path ให้ถูกต้อง)
 
 type Game = {
   id: string;
@@ -17,14 +20,15 @@ export default function GameCatalogPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 2. เรียกใช้ Hook เพื่อเอาฟังก์ชัน addToCart ออกมา
+  const { addToCart } = useCart();
+
   useEffect(() => {
     async function fetchGames() {
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:3000/api/game", {
-          method: "GET",
-          credentials: "include", // 🔑 ถ้าต้องส่ง cookie
-        });
+        // ตรวจสอบ URL ของ API ให้ถูกต้อง
+        const res = await fetch("http://localhost:3000/api/game");
 
         if (!res.ok) throw new Error("Failed to fetch games");
 
@@ -41,9 +45,27 @@ export default function GameCatalogPage() {
     fetchGames();
   }, []);
 
+  // 3. สร้างฟังก์ชันสำหรับจัดการการกดปุ่ม Add to Cart
+  const handleAddToCart = (e: MouseEvent, game: Game) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // คำนวณราคาสุดท้ายหลังหักส่วนลด (ถ้ามี)
+    const finalPrice = game.discount
+      ? game.price - (game.price * game.discount) / 100
+      : game.price;
+
+    addToCart({
+      productId: game.id,
+      name: game.title,
+      totalPrice: finalPrice,
+    });
+    alert(`เพิ่ม "${game.title}" ลงตะกร้าแล้ว!`);
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen text-xl font-bold">
+      <div className="flex items-center justify-center h-screen text-xl font-bold text-white">
         กำลังโหลดข้อมูล...
       </div>
     );
@@ -59,55 +81,73 @@ export default function GameCatalogPage() {
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
-      
       <h1 className="text-3xl font-bold mb-6 text-white">🎮 รายการเกม</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {games.map((game) => (
           <div
             key={game.id}
-            className="bg-white shadow-md rounded-2xl overflow-hidden hover:shadow-lg transition-shadow"
+            className="bg-white shadow-md rounded-2xl overflow-hidden flex flex-col group"
           >
             {/* รูปเกม */}
-            <div className="aspect-video bg-gray-200">
-              {game.imageUrl ? (
-                <img
-                  src={game.imageUrl}
-                  alt={game.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  No Image
-                </div>
-              )}
+            <div className="relative aspect-video bg-gray-200 overflow-hidden">
+              <Link href={`/gamekey/${game.slug}`}>
+                {game.imageUrl ? (
+                  <Image
+                    src={game.imageUrl}
+                    alt={game.title}
+                    layout="fill"
+                    className="object-cover group-hover:scale-110 transition-transform duration-300 ease-in-out"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    No Image
+                  </div>
+                )}
+              </Link>
             </div>
 
             {/* ข้อมูลเกม */}
-            <div className="p-4">
-              <h2 className="text-lg font-semibold">{game.title}</h2>
-              <p className="text-sm text-gray-500">
+            <div className="p-4 flex flex-col flex-grow">
+              <Link href={`/gamekey/${game.slug}`}>
+                <h2 className="text-lg font-semibold hover:text-blue-600 transition-colors truncate">
+                  {game.title}
+                </h2>
+              </Link>
+              <p className="text-sm text-gray-500 mb-2">
                 {game.category ?? "ทั่วไป"}
               </p>
 
-              {/* ราคา */}
-              <div className="mt-2">
-                {game.discount && game.discount > 0 ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-red-500 font-bold">
-                      {game.price - (game.price * game.discount) / 100} ฿
+              {/* ส่วนล่างของการ์ด (ราคาและปุ่ม) */}
+              <div className="mt-auto pt-2">
+                <div className="mb-3 h-8">
+                  {" "}
+                  {/* กำหนดความสูงคงที่ */}
+                  {game.discount && game.discount > 0 ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-red-500 font-bold text-lg">
+                        {(
+                          game.price -
+                          (game.price * game.discount) / 100
+                        ).toFixed(2)}{" "}
+                        ฿
+                      </span>
+                      <span className="text-gray-400 line-through text-sm">
+                        {game.price.toFixed(2)} ฿
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-gray-800 font-bold text-lg">
+                      {game.price.toFixed(2)} ฿
                     </span>
-                    <span className="text-gray-400 line-through text-sm">
-                      {game.price} ฿
-                    </span>
-                    <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full">
-                      -{game.discount}%
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-gray-800 font-bold">
-                    {game.price} ฿
-                  </span>
-                )}
+                  )}
+                </div>
+
+                <button
+                  onClick={(e) => handleAddToCart(e, game)}
+                  className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                >
+                  เพิ่มลงตะกร้า
+                </button>
               </div>
             </div>
           </div>

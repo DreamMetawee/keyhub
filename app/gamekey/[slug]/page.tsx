@@ -1,28 +1,17 @@
-// app/gamekey/[slug]/page.tsx
 "use client";
 
+import useCart from "@/app/lib/useCart"; // ตรวจสอบ Path ให้ถูกต้อง
 import { useParams } from "next/navigation";
-import React, { useEffect, useState } from "react"; // 💡 เพิ่ม useEffect, useState
-import { FaSteam } from "react-icons/fa";
-import { apiCall } from "@/app/lib/api"; // 🚀 Import API Helper
+import React, { useEffect, useState } from "react";
 
-// 💡 สร้าง Type สำหรับข้อมูลที่เราคาดหวังจาก API
-interface SellerItem {
-  seller: string;
-  platform: string;
-  region: string;
-  price: number; // เปลี่ยนเป็น number
-  shopUrl: string;
-  // เพิ่ม field อื่นๆ ตามที่ API ส่งกลับมา
-}
-
+// Interface ไม่ต้องมี GameKey แล้ว เพราะเราจะไม่แสดง Key ที่หน้านี้
 interface GameData {
   gameDetails: {
     title: string;
-    imageUrl: string;
-    // เพิ่ม field ที่คุณต้องการใช้
+    imageUrl?: string;
+    category?: string;
+    price: number;
   };
-  mockSellerData: SellerItem[];
   availableStock: number;
 }
 
@@ -34,20 +23,19 @@ const GameKeyPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 2. Logic การดึงข้อมูลจาก API เมื่อ Component โหลด
+  // ✅ FIX: เรียกใช้ Hook ด้วย ()
+  const { addToCart } = useCart();
+
   useEffect(() => {
     if (!slug) return;
 
     const fetchGameDetails = async () => {
       try {
-        // 🚀 CALL API: GET /api/games/[slug]
-        const data = await apiCall<GameData>(`/games/${slug}`, {
-          method: "GET",
-        });
+        const res = await fetch(`http://localhost:3000/api/game/${slug}`);
+        if (!res.ok) throw new Error("Failed to fetch game data");
+        const data = await res.json();
         setGameData(data);
-        setError(null);
       } catch (err: any) {
-        console.error("Fetch Error:", err);
         setError(err.message || "Failed to load game data.");
       } finally {
         setLoading(false);
@@ -57,87 +45,52 @@ const GameKeyPage = () => {
     fetchGameDetails();
   }, [slug]);
 
-  // 3. แสดงสถานะ Loading/Error
-  if (loading) {
+  const handleAddToCart = () => {
+    if (!gameData) return;
+    addToCart({
+      productId: slug,
+      name: gameData.gameDetails.title,
+      totalPrice: gameData.gameDetails.price,
+    });
+    alert(`"${gameData.gameDetails.title}" ถูกเพิ่มลงตะกร้าแล้ว!`);
+  };
+
+  if (loading)
     return (
       <div className="pt-20 px-4 md:px-8 bg-gray-900 min-h-screen text-white text-center">
         Loading game details...
       </div>
     );
-  }
 
-  if (error || !gameData) {
+  if (error || !gameData)
     return (
       <div className="pt-20 px-4 md:px-8 bg-gray-900 min-h-screen text-red-400 text-center">
         Error: {error || "Game not found."}
       </div>
     );
-  }
 
-  // 4. แสดงผลข้อมูลจริง
   return (
-    <div className="pt-20 px-4 md:px-8 bg-gray-900 min-h-screen">
-      <h1 className="text-2xl font-bold text-white mb-6">
-        Game Keys for: {gameData.gameDetails.title}
-        <span className="text-sm text-gray-400 ml-3">
-          ({gameData.availableStock} in stock)
-        </span>
-      </h1>
+    <div className="pt-20 px-4 md:px-8 bg-gray-900 min-h-screen text-white">
+      <h1 className="text-3xl font-bold mb-4">{gameData.gameDetails.title}</h1>
+      <p className="text-gray-400 mb-2">
+        Stock Available: {gameData.availableStock}
+      </p>
+      <p className="text-2xl font-semibold text-green-400 mb-6">
+        ราคา: {gameData.gameDetails.price.toFixed(2)} บาท
+      </p>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        {/* Table Header */}
-        <div className="grid grid-cols-6 gap-4 py-3 px-6 bg-gray-100 text-gray-600 font-semibold border-b border-gray-200">
-          <div className="col-span-1">ผู้ขาย</div>
-          <div className="col-span-1">แพลตฟอร์ม</div>
-          <div className="col-span-1">รุ่น</div>
-          <div className="col-span-1">ภูมิภาค</div>
-          <div className="col-span-1">ราคา</div>
-          <div className="col-span-1 text-right"></div>
-        </div>
-
-        {/* Table Rows */}
-        {gameData.mockSellerData.map((item, index) => (
-          <div
-            key={index}
-            className="grid grid-cols-6 gap-4 items-center py-4 px-6 border-b border-gray-200 last:border-b-0"
-          >
-            <div className="col-span-1 flex items-center space-x-3">
-              {/* 💡 ใช้รูปภาพจาก gameData.gameDetails.imageUrl */}
-              <img
-                src={gameData.gameDetails.imageUrl || "/placeholder.jpg"}
-                alt={`${item.seller} game cover`}
-                className="w-10 h-10 rounded-md object-cover"
-                onError={(e) => {
-                  e.currentTarget.src =
-                    "https://placehold.co/40x40/cccccc/333333?text=N/A";
-                  e.currentTarget.onerror = null;
-                }}
-              />
-              <span className="text-gray-800 font-medium">{item.seller}</span>
-            </div>
-            <div className="col-span-1 flex items-center gap-2">
-              <FaSteam className="text-gray-500" size={20} />
-              <span className="text-gray-700">{item.platform}</span>
-            </div>
-            <div className="col-span-1 text-gray-700">{item.platform}</div>
-            <div className="col-span-1 text-gray-700">{item.region}</div>
-            <div className="col-span-1 text-gray-900 font-bold">
-              {/* แสดงราคารูปแบบ บาทไทย */}
-              {item.price.toFixed(2)} ฿
-            </div>
-            <div className="col-span-1 text-right">
-              <a
-                href={item.shopUrl || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600"
-              >
-                สั่งซื้อ
-              </a>
-            </div>
-          </div>
-        ))}
+      <div className="mb-8">
+        <button
+          onClick={handleAddToCart}
+          disabled={gameData.availableStock === 0}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-500 disabled:cursor-not-allowed"
+        >
+          {gameData.availableStock > 0 ? "🛒 เพิ่มลงตะกร้า" : "สินค้าหมด"}
+        </button>
       </div>
+
+      {/* ❌ REMOVED: ลบส่วนแสดง Key ทั้งหมดออกจากหน้านี้ */}
+      {/* ส่วนนี้ควรไปอยู่ในหน้าที่แสดง "คลัง Key" ของผู้ใช้หลังจากการซื้อ */}
     </div>
   );
 };

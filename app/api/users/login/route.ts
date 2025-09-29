@@ -65,3 +65,6 @@ export async function POST(request: NextRequest) {
     connection.release();
   }
 }
+export async function OPTIONS() {
+  return NextResponse.json({}, { status: 200 });
+}
