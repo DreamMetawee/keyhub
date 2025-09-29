@@ -2,11 +2,11 @@
 
 import { useEffect, useState, MouseEvent } from "react";
 import Link from "next/link";
-import Image from "next/image"; // เพิ่ม Import สำหรับ Image
-import useCart from "@/app/lib/useCart"; // 1. Import useCart Hook (ตรวจสอบ Path ให้ถูกต้อง)
+import Image from "next/image";
+import {useCart} from "@/app/context/CartContext";
 
 type Game = {
-  id: string;
+  id: string; // id จาก API ยังคงเป็น string
   title: string;
   slug: string;
   price: number;
@@ -20,18 +20,14 @@ export default function GameCatalogPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 2. เรียกใช้ Hook เพื่อเอาฟังก์ชัน addToCart ออกมา
   const { addToCart } = useCart();
 
   useEffect(() => {
     async function fetchGames() {
       try {
         setLoading(true);
-        // ตรวจสอบ URL ของ API ให้ถูกต้อง
         const res = await fetch("http://localhost:3000/api/game");
-
         if (!res.ok) throw new Error("Failed to fetch games");
-
         const data = await res.json();
         setGames(data);
       } catch (err: any) {
@@ -45,20 +41,19 @@ export default function GameCatalogPage() {
     fetchGames();
   }, []);
 
-  // 3. สร้างฟังก์ชันสำหรับจัดการการกดปุ่ม Add to Cart
+  // ✅ แก้ไขฟังก์ชันนี้
   const handleAddToCart = (e: MouseEvent, game: Game) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // คำนวณราคาสุดท้ายหลังหักส่วนลด (ถ้ามี)
     const finalPrice = game.discount
       ? game.price - (game.price * game.discount) / 100
       : game.price;
 
     addToCart({
-      productId: game.id,
+      productId: Number(game.id), // <-- แปลง id เป็น number ตาม CartItem interface
       name: game.title,
-      totalPrice: finalPrice,
+      price: finalPrice, // <-- เปลี่ยนชื่อเป็น price ตาม CartItem type
     });
     alert(`เพิ่ม "${game.title}" ลงตะกร้าแล้ว!`);
   };
@@ -78,7 +73,6 @@ export default function GameCatalogPage() {
       </div>
     );
   }
-
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6 text-white">🎮 รายการเกม</h1>

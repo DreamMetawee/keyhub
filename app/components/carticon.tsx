@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import useCart from "@/app/lib/useCart"; // Adjust this path if your hook is elsewhere
+import {useCart} from "@/app/context/CartContext"; // Adjust this path if your hook is elsewhere
 
 export default function CartIcon() {
   const cartData = useCart();

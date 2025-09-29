@@ -1,7 +1,6 @@
 "use client";
 
-import useCart from "@/app/lib/useCart";
-import Image from "next/image";
+import { useCart } from "@/app/context/CartContext"; // ✅ 1. เปลี่ยน path import มาที่ Context
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -9,7 +8,8 @@ export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, total } = useCart();
   const router = useRouter();
 
-  const handleUpdateQuantity = (productId: string, quantity: number) => {
+  // ✅ 2. แก้ไขให้รับ productId เป็น number
+  const handleUpdateQuantity = (productId: number, quantity: number) => {
     updateQuantity(productId, quantity);
   };
 
@@ -30,7 +30,6 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Item List */}
             <div className="lg:col-span-2 space-y-4">
               {cart.map((item) => (
                 <div
@@ -40,7 +39,8 @@ export default function CartPage() {
                   <div className="flex-grow">
                     <p className="font-semibold">{item.name}</p>
                     <p className="text-sm text-gray-400">
-                      {item.totalPrice.toFixed(2)} ฿
+                      {/* ✅ 3. แก้ไขการแสดงผลราคาให้ถูกต้อง */}
+                      {(item.price * item.quantity).toFixed(2)} ฿
                     </p>
                   </div>
                   <div className="flex items-center gap-4">
@@ -51,14 +51,14 @@ export default function CartPage() {
                       onChange={(e) =>
                         handleUpdateQuantity(
                           item.productId,
-                          parseInt(e.target.value)
+                          parseInt(e.target.value) || 1
                         )
                       }
-                      className="w-16 p-1 rounded bg-gray-700 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-16 p-1 rounded bg-gray-700 text-center"
                     />
                     <button
                       onClick={() => removeFromCart(item.productId)}
-                      className="text-red-500 hover:text-red-400 transition-colors"
+                      className="text-red-500 hover:text-red-400"
                     >
                       ลบ
                     </button>
@@ -67,7 +67,6 @@ export default function CartPage() {
               ))}
             </div>
 
-            {/* Summary */}
             <div className="bg-gray-800 p-6 rounded-lg h-fit">
               <h2 className="text-xl font-bold mb-4">สรุปยอด</h2>
               <div className="flex justify-between mb-2">
@@ -81,7 +80,7 @@ export default function CartPage() {
               </div>
               <button
                 onClick={() => router.push("/checkout")}
-                className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg"
               >
                 ไปที่หน้าชำระเงิน
               </button>

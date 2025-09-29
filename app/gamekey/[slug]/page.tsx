@@ -1,12 +1,13 @@
 "use client";
 
-import useCart from "@/app/lib/useCart"; // ตรวจสอบ Path ให้ถูกต้อง
+import { useCart } from "@/app/context/CartContext";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
-// Interface ไม่ต้องมี GameKey แล้ว เพราะเราจะไม่แสดง Key ที่หน้านี้
+// ✅ 1. เพิ่ม id (number) เข้าไปใน Interface
 interface GameData {
   gameDetails: {
+    id: number; // <-- สำคัญมาก! ต้องมี id ที่เป็นตัวเลขจาก API
     title: string;
     imageUrl?: string;
     category?: string;
@@ -23,14 +24,13 @@ const GameKeyPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ FIX: เรียกใช้ Hook ด้วย ()
   const { addToCart } = useCart();
 
   useEffect(() => {
     if (!slug) return;
-
     const fetchGameDetails = async () => {
       try {
+        // ตรวจสอบให้แน่ใจว่า API ของคุณ return id ของเกมมาด้วย
         const res = await fetch(`http://localhost:3000/api/game/${slug}`);
         if (!res.ok) throw new Error("Failed to fetch game data");
         const data = await res.json();
@@ -41,16 +41,16 @@ const GameKeyPage = () => {
         setLoading(false);
       }
     };
-
     fetchGameDetails();
   }, [slug]);
 
+  // ✅ 2. แก้ไขฟังก์ชันนี้
   const handleAddToCart = () => {
     if (!gameData) return;
     addToCart({
-      productId: slug,
+      productId: gameData.gameDetails.id, // <-- ใช้ id (number)
       name: gameData.gameDetails.title,
-      totalPrice: gameData.gameDetails.price,
+      price: gameData.gameDetails.price, // <-- ใช้ price
     });
     alert(`"${gameData.gameDetails.title}" ถูกเพิ่มลงตะกร้าแล้ว!`);
   };
@@ -78,7 +78,6 @@ const GameKeyPage = () => {
       <p className="text-2xl font-semibold text-green-400 mb-6">
         ราคา: {gameData.gameDetails.price.toFixed(2)} บาท
       </p>
-
       <div className="mb-8">
         <button
           onClick={handleAddToCart}
@@ -88,9 +87,6 @@ const GameKeyPage = () => {
           {gameData.availableStock > 0 ? "🛒 เพิ่มลงตะกร้า" : "สินค้าหมด"}
         </button>
       </div>
-
-      {/* ❌ REMOVED: ลบส่วนแสดง Key ทั้งหมดออกจากหน้านี้ */}
-      {/* ส่วนนี้ควรไปอยู่ในหน้าที่แสดง "คลัง Key" ของผู้ใช้หลังจากการซื้อ */}
     </div>
   );
 };

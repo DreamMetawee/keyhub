@@ -1,4 +1,4 @@
-import { SubscriptionForm } from "../components/form/demoform";
+import { SubscriptionForm } from "../components/form/subscription";
 import { NextPage } from "next";
 
 const DemographicPage: NextPage = () => {

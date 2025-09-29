@@ -16,20 +16,24 @@ export const metadata: Metadata = {
   description: "Game key marketplace interface",
 };
 
-// ใช้ React.PropsWithChildren เพื่อให้ TypeScript รับ children
-export default function RootLayout({ children }: React.PropsWithChildren) {
+// 1. ใช้ type แบบชัดเจน
+type RootLayoutProps = {
+  children: React.ReactNode;
+};
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} 
-          bg-gradient-to-br from-black via-gray-900 to-gray-800 
-          text-white min-h-screen flex`}
+        bg-gradient-to-br from-black via-gray-900 to-gray-800 
+        text-white min-h-screen flex`}
       >
         {/* Sidebar */}
         <aside
           className="hidden md:flex fixed left-0 top-0 h-full w-64 
-            bg-gradient-to-b from-gray-950 via-gray-900 to-gray-800
-            border-r border-gray-700 shadow-lg"
+          bg-gradient-to-b from-gray-950 via-gray-900 to-gray-800
+          border-r border-gray-700 shadow-lg"
         >
           <Sidebar />
         </aside>
