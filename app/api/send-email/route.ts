@@ -37,18 +37,27 @@ export async function POST(req: Request) {
       },
     });
 
-    await transporter.sendMail({
-      from: `"KeyHub" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: `Welcome, ${favoriteGenre} fan! Here are some games for you!`,
-      html: `
-        <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-            <h1 style="color: #4A90E2;">Welcome to KeyHub!</h1>
-            <p>Thanks for subscribing. As a ${favoriteGenre} fan, we think you'll love KEYHUB!</p>
-            
-        </div>
-    `,
-    });
+await transporter.sendMail({
+  from: `"KeyHub" <${process.env.EMAIL_USER}>`,
+  to: email,
+  subject: `Welcome, ${
+    favoriteGenre || "game"
+  } fan! Here are some games for you!`,
+  html: `
+    <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+      <h1 style="color: #4A90E2;">Welcome to KeyHub!</h1>
+      <p>Hi <strong>${email}</strong>,</p>
+      <p>Thanks for subscribing. As a <strong>${
+        favoriteGenre || "game"
+      }</strong> fan, we think you'll love KEYHUB!</p>
+      <p>We'll send you updates and exclusive game keys to this email: <strong>${email}</strong></p>
+      <p>Check out our site for more info: 
+        <a href="https://sites.google.com/udru.ac.th/keyhub/%E0%B8%AB%E0%B8%99%E0%B8%B2%E0%B9%81%E0%B8%A3%E0%B8%81" target="_blank" style="color: #4A90E2;">KeyHub Google Site</a>
+      </p>
+    </div>
+  `,
+});
+
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

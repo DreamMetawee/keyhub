@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import pool from "../../../util/db";
+import jwt from "jsonwebtoken";
 
 export async function POST(request: NextRequest) {
   const { name, password } = await request.json();
@@ -36,6 +37,12 @@ export async function POST(request: NextRequest) {
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     console.log("🔐 Password match:", isPasswordCorrect);
+    const secret = process.env.JWT_SECRET!; // เก็บใน .env ดีกว่า
+    const token = jwt.sign(
+      { id: user.id, name: user.name, email: user.email },
+      secret,
+      { expiresIn: "1h" }
+    );
 
     if (!isPasswordCorrect) {
       console.log("❌ Incorrect password");
@@ -49,6 +56,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "เข้าสู่ระบบสำเร็จ",
+      token, // ส่ง token กลับไปด้วย
       user: {
         id: user.id,
         name: user.name,

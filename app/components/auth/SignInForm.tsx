@@ -1,18 +1,15 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Label from "../form/Label";
 import Input from "../input/inputfield";
-import Checkbox from "../input/checkbox";
 import Button from "../ui/button/button";
 import eyeIcon from "../../../public/icons/eye.svg";
 import eyeCloseIcon from "../../../public/icons/eye-off.svg";
-// import { strict } from "assert"; // สามารถลบออกได้ถ้าไม่ได้ใช้
 
-
-// --- API Functions (ส่วนนี้ถูกต้องแล้ว) ---
+// --- API Functions ---
 async function loginUser(name: string, password: string) {
   const res = await fetch("http://localhost:3001/api/users/login", {
     method: "POST",
@@ -45,7 +42,6 @@ export default function SignInForm() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  // ... state อื่นๆ เหมือนเดิม
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -56,8 +52,7 @@ export default function SignInForm() {
     confirmPassword: "",
   });
 
-  // --- handlerSubmit with Type Annotation ---
-  // TYPE FIX 1: เพิ่ม Type ให้กับ 'e'
+  // --- Submit ---
   const handlerSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsPending(true);
@@ -83,6 +78,12 @@ export default function SignInForm() {
           setError(response.message || "เข้าสู่ระบบไม่สำเร็จ");
         }
       } else {
+        if (password !== confirmPassword) {
+          setError("รหัสผ่านไม่ตรงกัน");
+          setIsPending(false);
+          return;
+        }
+
         await registerUser(name, email, password);
         console.log("Registration successful, please log in.");
         setIsLogin(true);
@@ -105,15 +106,12 @@ export default function SignInForm() {
     }
   };
 
-
-  // --- handlerChange with Type Annotation ---
-  // TYPE FIX 3: เพิ่ม Type ให้กับ 'e'
+  // --- Input change ---
   const handlerChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // --- JSX (ไม่ต้องแก้ไข) ---
   return (
     <div className="flex flex-1 flex-col min-h-screen">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
@@ -123,13 +121,12 @@ export default function SignInForm() {
           </h1>
           <p className="text-sm text-gray-200 dark:text-gray-300">
             {isLogin
-              ? "กรอกอีเมลและรหัสผ่านของคุณเพื่อเข้าสู่ระบบ!"
+              ? "กรอกชื่อผู้ใช้งานและรหัสผ่านของคุณเพื่อเข้าสู่ระบบ!"
               : "กรอกข้อมูลเพื่อสร้างบัญชีผู้ใช้งานใหม่!"}
           </p>
         </div>
         <form onSubmit={handlerSubmit}>
           <div className="space-y-6">
-            {/* Input fields */}
             {!isLogin && (
               <div>
                 <Label>
@@ -200,12 +197,10 @@ export default function SignInForm() {
               </div>
             )}
 
-            {/* Error display */}
             {error && (
               <p className="text-sm text-red-500 text-center">{error}</p>
             )}
 
-            {/* Submit button and toggle */}
             <div>
               <Button disabled={isPending} className="w-full" size="sm">
                 {isPending

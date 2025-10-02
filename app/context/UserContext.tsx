@@ -12,6 +12,7 @@ export interface UserProps {
   phone: string; // Corrected: This is the required property
   avatar: string;
   status: boolean;
+  email: string; // Added email property
 }
 
 interface UserContextProps {
@@ -61,6 +62,7 @@ const UserContext = createContext<UserContextProps>({
       phone: "", // Corrected: Changed from sphone to phone
       avatar: "",
       status: true,
+      email:"",
     },
   }),
   // เพิ่ม default register function ที่นี่

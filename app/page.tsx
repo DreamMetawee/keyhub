@@ -87,9 +87,9 @@ export default function GameCatalogPage() {
               <Link href={`/gamekey/${game.slug}`}>
                 {game.imageUrl ? (
                   <Image
-                    src={game.imageUrl}
+                    src={`http://localhost:3000${game.imageUrl}`} // full URL
                     alt={game.title}
-                    layout="fill"
+                    fill
                     className="object-cover group-hover:scale-110 transition-transform duration-300 ease-in-out"
                   />
                 ) : (
