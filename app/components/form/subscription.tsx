@@ -47,7 +47,7 @@ export const SubscriptionForm: FC = () => {
     setStatus(null);
 
     try {
-      const res = await fetch("/api/send-email", {
+      const res = await fetch("http://localhost:3001/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -51,11 +51,20 @@ await transporter.sendMail({
         favoriteGenre || "game"
       }</strong> fan, we think you'll love KEYHUB!</p>
       <p>We'll send you updates and exclusive game keys to this email: <strong>${email}</strong></p>
+      <img src="cid:poster1" alt="Welcome" style="width:100%;max-width:560px;border-radius:6px;margin-bottom:12px;"/>
       <p>Check out our site for more info: 
         <a href="https://sites.google.com/udru.ac.th/keyhub/%E0%B8%AB%E0%B8%99%E0%B8%B2%E0%B9%81%E0%B8%A3%E0%B8%81" target="_blank" style="color: #4A90E2;">KeyHub Google Site</a>
       </p>
     </div>
   `,
+  attachments: [
+    {
+      filename: "poster_1.png",
+      path: "D:/Digital_Maarketing/KeyHub/keyhub/public/img/poster_1.png",
+
+      cid: "poster1", // same cid value as in the html img src
+    },
+  ], // ถ้าต้องการแนบไฟล์ให้เพิ่มที่นี่
 });
 
 
